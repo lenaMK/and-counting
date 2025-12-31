@@ -1,41 +1,21 @@
 /*
-Cartographie des données MONA : œuvres réalisées par des femmes
+Cartographie des données MONA : œuvres réalisées par des femmxs
 LenaMK, Maison MONA, HAR7005
 */
 
-var margin = {top: 0, right: 0, bottom: 0, left: 0},
 width = window.innerWidth
 height = window.innerHeight
 
 const svgCarte = d3.select("#carte")
-.attr("width", width + margin.left + margin.right)
-.attr("height", height + margin.top + margin.bottom);
+.attr("width", width)
+.attr("height", height);
 const container = svgCarte.append('g')
 
 //geo
 var proj = d3.geoConicConformal();
 const path = d3.geoPath();
 
-//couleurs des points
-const color = d3.scaleOrdinal(["art", "lieu", "patrimoine", "autre"], ["#FAE800", "#612B8D", "#FE7E61", "#010202"]) 
-
-//zone d'information associée à la souris
-const tooltip = d3.select("body").append("div")
-.attr("class", "tooltip")
-.style("position", "absolute")
-.style("visibility", "hidden")
-
-
-function showToolTip (text, coords){
-    d3.select(".tooltip")
-      .text(text)
-      .style("top", coords[1] + "px")
-      .style("left", coords[0] + "px")
-      .style("visibility", "visible");
-}
-
-
-function map (geobaseMTL, outer, pre1982){
+function map (geobaseMTL, outer, artwork){
 
     proj.center([-73.5878, 45.5088]) // Center on Montreal
         .scale(1000)
@@ -43,6 +23,7 @@ function map (geobaseMTL, outer, pre1982){
 
     path.projection(proj);
 
+//layer contour île
     container.selectAll("path")
         .data(outer.features)
         .join('path')
@@ -55,31 +36,28 @@ function map (geobaseMTL, outer, pre1982){
         .attr("d", d => path(d))
         .attr('stroke', 'black')
         .attr('fill', 'none')    
-/*
-//layer contour île
-*/
 
-
+//layer oeuvres
 var moreDots = container.selectAll("circle");
-    
-moreDots
-    .data(pre1982)
-    .enter()
-    .append("circle")
-        .attr('class', '50-artwork-dot')
-        .attr("cx", d => proj([d.location.lng, d.location.lat])[0])
-        .attr("cy", d => proj([d.location.lng, d.location.lat])[1])
-        .attr("id", d => d.id)
-        .attr("r", "3px")
-        .attr("fill", 'black')
-        .attr("opacity", 0.5)    
 
+//grand cercle opacité 0.5
+    moreDots
+        .data(artwork)
+        .enter()
+        .append("circle")
+            .attr('class', '50-artwork-dot')
+            .attr("cx", d => proj([d.location.lng, d.location.lat])[0])
+            .attr("cy", d => proj([d.location.lng, d.location.lat])[1])
+            .attr("id", d => d.id)
+            .attr("r", "3px")
+            .attr("fill", 'black')
+            .attr("opacity", 0.5)    
 
-
+//petit point noir
     var dots = container.selectAll("circles");
 
     dots
-        .data(pre1982)
+        .data(artwork)
         .enter()
         .append("circle")
             .attr('class', 'artwork-dot')
@@ -89,8 +67,6 @@ moreDots
             .attr("r", "1px")
             .attr("fill", 'black')
             .attr("opacity", 1)    
-
-    
 
 //zoom sur l'image
     svgCarte.call(
@@ -103,9 +79,6 @@ moreDots
     )    
     return container.node();
 }
-
-
-
 
 Promise.all([
     d3.json('./data/reseau_cyclable.geojson'),
